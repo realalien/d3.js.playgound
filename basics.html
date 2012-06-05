@@ -1,0 +1,192 @@
+<html>
+    <head>
+        <title>D3 Test</title>
+        <script type="text/javascript" src="d3.v2.js"></script>
+        <script type="text/javascript" src="jquery-1.7.2.js"></script>
+        <script type="text/javascript" src="./facebox/src/facebox.js"></script>
+        <link href="./facebox/src/facebox.css" rel="stylesheet" type="text/css">
+        <script src=" http://tjs.sjs.sinajs.cn/open/api/js/wb.js?appkey=3422703718" type="text/javascript" charset="utf-8"></script>
+    </head>
+    <body>
+        
+        <script type="text/javascript">
+            $.facebox.settings.closeImage = './facebox/src/closelabel.png' ;
+            $.facebox.settings.loadingImage = './facebox/src/loading.gif' ;
+        </script>
+        
+        Test of svg <br/>
+        <script type="text/javascript">
+            
+            // tutorial followed: http://bl.ocks.org/1095795
+            var w = 1024,  // TODO: make it resizable?!
+            h = 500,
+            radius = 5;
+            
+            var current_logged_in_user;
+            var users;
+            
+            var drag = d3.behavior.drag()
+            .origin(Object)
+            .on("drag", dragmove);
+            
+            // see: examples/drag
+            var svg = d3.select("body").append("svg")
+            .attr("width", w)
+            .attr("height", h);
+            
+            
+            function showUserDetail(){
+                
+            }
+            
+            // draw circle to symbolize the msgs/friends?
+            function simple_draw() {
+                var circles = svg.selectAll("circle")
+                .data(users)
+                .enter()
+                .append("circle")
+                //.on("mousemove", mousemove)
+                .on("mouseover", mouseover)   // EXP: info display, e.g. show an organization of people
+                .on("mouseout", mouseout);
+                //.call(drag);
+                
+                circles.attr("cx", function(d, i) {
+                             return (i * 20) + 25;
+                             })
+                .attr("cy", function(d, i) {
+                      return 50;
+                        //return (i * 10) + 25;
+                        })
+                .attr("r", function(d) {
+                      return 5;
+                      })
+                .attr("rel", "facebox")  // EXP: facebox
+                .attr("fill", function(d){
+                      if (d.gender == "f" ){ return "pink";}  //EXP: color exp
+                      else {return "green";}
+                      });
+                
+            }
+            
+            function mouseover(d,i) {
+                var s = undefined;
+                console.log("mouseover " + d.screen_name + " " + i );
+                
+                // EXP: facebox
+                jQuery.facebox(d.screen_name + "<br/>" + d.description );
+                
+            }
+            
+            function mousemove(d,i) {
+                var s = undefined;
+                console.log("mousemove " + d.screen_name + " " + i );
+            }
+            
+            function mouseout(d,i) {
+                var s = undefined;
+                console.log("mouseout " + d.screen_name + " " + i );
+            }
+            
+            function dragmove(d,i) {
+                var circles = svg.selectAll("circle");
+                circles[i]
+                .attr("cx", d.x = Math.max(radius, Math.min(w - radius, d3.event.x)))
+                .attr("cy", d.y = Math.max(radius, Math.min(h - radius, d3.event.y)));
+            }
+            
+        </script>
+        
+        <br/>
+        test  weibo js SDK <br/>
+        <div id="wb_connect_btn"></div>
+        <script>
+            var accessToken = "";
+            WB2.anyWhere(function(W){
+                 W.widget.connectButton({
+                        id: "wb_connect_btn",	
+                        type:'4,2',
+                        callback : {
+                            login:function(o){	//登录后的回调函数
+                                //alert("Hello, welcome back: "+o.screen_name)	
+                                //accessToken = document.location.hash.substring(1);  //解析hash得到access_token值。
+                                //console.log(accessToken);
+                            },
+                            logout:function(){	//退出后的回调函数
+                                alert('logout');
+                            }
+                        }
+                });
+            });
+        </script>
+        
+        <br/>
+        
+        test data retrieval <br/>
+        
+        
+        
+        <script type="text/javascript">
+            
+            // ------------ d3 draw --------------
+            function d3test(jsondata) {
+                //console.log(jsondata);
+                
+                statuses = jsondata["statuses"];
+                console.log(statuses);
+                
+                d3.select("#friends_timeline").selectAll("p")
+                  .data(statuses)
+                  .enter()
+                  .append("p")
+                  .text( function(d){ 
+                            var user= d["user"];
+                            return user["screen_name"];
+                        }  )
+                  .style("color", function(d) {
+                       var user = d["user"];
+                       
+                       if (user["gender"] == "f") {	//Threshold of 15
+                            return "pink";
+                       } else {
+                            return "blue";
+                       }
+                });
+            }
+            
+            // ------------ data retrieval --------------
+            function retrieve() {
+                WB2.anyWhere(function(W){
+                     // 获取评论列表
+                     W.parseCMD(  "/friendships/friends.json",// "/friends_timeline.json", 
+                        function(sResult, bStatus){
+                            if(bStatus == true) { 
+                                alert(sResult); 
+                                console.log("Going to process json data and render...");
+                                //d3test(sResult);
+                                users = sResult["users"];
+                                simple_draw();
+                            }
+                        },
+                        {
+                            access_token: accessToken,
+                            screen_name:"realalien"
+                        },
+                        {
+                            method: 'get'
+                        });
+                     });
+                
+            }
+        </script>
+        <button type="button" onclick="retrieve()">Retrieve Friends status</button>
+        
+        <div id="friends_timeline"></div>
+        
+        test of d3.js <br/>
+        <script type="text/javascript">
+                d3.select("body").append("p").text("New paragraph!");
+        </script>
+        
+        
+    </body>
+</html>

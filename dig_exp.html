@@ -1,0 +1,67 @@
+<html>
+    <head>
+        <title>D3 Test</title>
+        <script type="text/javascript" src="d3.v2.js"></script>
+        <script type="text/javascript" src="jquery-1.7.2.js"></script>
+        <script type="text/javascript" src="./facebox/src/facebox.js"></script>
+        <link href="./facebox/src/facebox.css" rel="stylesheet" type="text/css">
+        <script src=" http://tjs.sjs.sinajs.cn/open/api/js/wb.js?appkey=3422703718" type="text/javascript" charset="utf-8"></script>
+            
+        <!-- TODO: consider refactor to -->    
+    </head>
+    <body>
+        
+        <script type="text/javascript">
+            // TODO: how to make it a class method? 
+            var width = 1024;
+            var height = 768;
+            // Tutorial followed: Window size and scrolling
+            // REF: http://www.howtocreate.co.uk/tutorials/javascript/browserwindow
+            function windowSize() {
+                //var width = 0, height = 0;
+                if( typeof( window.innerWidth ) == 'number' ) {
+                    //Non-IE
+                    width = window.innerWidth;
+                    height = window.innerHeight;
+                } else if( document.documentElement && ( document.documentElement.clientWidth || document.documentElement.clientHeight ) ) {
+                    //IE 6+ in 'standards compliant mode'
+                    width = document.documentElement.clientWidth;
+                    height = document.documentElement.clientHeight;
+                } else if( document.body && ( document.body.clientWidth || document.body.clientHeight ) ) {
+                    //IE 4 compatible
+                    width = document.body.clientWidth;
+                    height = document.body.clientHeight;
+                }
+                // window.alert( 'Width = ' + width );
+                // window.alert( 'Height = ' + height );
+            }
+            
+        </script>
+        
+        <div id="wb_connect_btn"></div>
+        <script>
+            var accessToken = "";
+            WB2.anyWhere(function(W){
+                 W.widget.connectButton({
+                        id: "wb_connect_btn",	
+                        type:'4,2',
+                        callback : {
+                            login:function(o){	//登录后的回调函数
+                            //alert("Hello, welcome back: "+o.screen_name)	
+                            //accessToken = document.location.hash.substring(1);  //解析hash得到access_token值。
+                            //console.log(accessToken);
+                        },
+                        logout:function(){	//退出后的回调函数
+                            alert('logout');
+                            }
+                        }
+                        });
+                 });
+        </script>
+        
+        <script type="text/javascript">
+            
+        </script>
+
+    </body>
+</html>

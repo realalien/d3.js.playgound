@@ -1,0 +1,128 @@
+<html>
+    <head>
+        <title>D3 Test</title>
+        <script type="text/javascript" src="d3.v2.js"></script>
+        <script type="text/javascript" src="jquery-1.7.2.js"></script>
+        <script type="text/javascript" src="./facebox/src/facebox.js"></script>
+        
+        <link href="./facebox/src/facebox.css" rel="stylesheet" type="text/css">
+            
+        <!-- for js widget of sina login -->    
+        <script src=" http://tjs.sjs.sinajs.cn/open/api/js/wb.js?appkey=3422703718" type="text/javascript" charset="utf-8"></script>
+            
+        <!--tutorial followed: http://bl.ocks.org/1021841 -->
+        <!--tutorial followed: https://github.com/mbostock/d3/wiki/Force-Layout  -->
+        <script type="text/javascript" src="http://mbostock.github.com/d3/d3.js"></script>
+    </head>
+    <body>
+        <h4> Weibo login placeholder </h4>
+        <div id="wb_connect_btn"></div>
+        <script>
+            var accessToken = "";
+            WB2.anyWhere(function(W){
+                 W.widget.connectButton({
+                        id: "wb_connect_btn",	
+                        type:'4,2',
+                        callback : {
+                        login:function(o){	//登录后的回调函数
+                        //alert("Hello, welcome back: "+o.screen_name)	
+                        //accessToken = document.location.hash.substring(1);  //解析hash得到access_token值。
+                            console.log("[INFO] Logged in!");
+                        },
+                        logout:function(){	//退出后的回调函数
+                        alert('logout');
+                        }
+                        }
+                        });
+             });
+        </script>
+        
+        <h4> Data </h4>
+        <script type="text/javascript">
+            
+            /*****************************************************************
+             *  d3 process 
+             */
+            
+            // TODO: resize is needed for desktop users!
+            var w = $(window).width(),
+            h =  $(window).height(),            
+            fill = d3.scale.category10();
+            
+                      
+            /* Q: how to use this first-thing in jquery? A:
+             $(document).ready( function() {
+                // put all your jQuery goodness in here.
+                
+            });
+             */
+            
+            
+            var vis = d3.select("body").append("svg:svg")
+            .attr("width", w)
+            .attr("height", h);
+            
+            var force;
+            var nodes;
+            
+            
+            // TODO: find a better to redraw after data retrieval is done!
+            function simple_draw() {
+                force = d3.layout.force()
+                .nodes(nodes)  // 
+                .links([])
+                .size([w, h])
+                .start();
+            }
+            
+
+            // TODO: it is temporary solution for controlling the process of 'retrieval -> draw'
+            function retrieve_data() {
+                search_users_by_keyword("上海交通大学");  
+            }
+            
+            
+            // EXP: entry point once the window resized. Get ready for graph resizing....
+            // NOTE: it's simplified method, for more info, see: resize.casestudy.html
+            // NOTE: probably it will call multiple times during one resizing session. May cause problem.
+            $(window).resize(function() {
+                 console.log("[INFO] window resized. w:" + w + " h:"+h); 
+             });
+            
+            
+            
+            /*****************************************************************
+             *  Weibo data retrieval 
+             */
+            
+            // 用关键字搜索用户
+            function search_users_by_keyword(kw) {
+                WB2.anyWhere(function(W){
+                     // 搜索用户时的联想搜索建议
+                     W.parseCMD("/search/suggestions/users.json",// "/friends_timeline.json", 
+                        function(sResult, bStatus){
+                            if(bStatus == true) { 
+                                alert(sResult); 
+                                console.log("Going to user data");
+                                //d3test(sResult);
+                                nodes = sResult["users"];  // IDEA: shall we create a data pool for data retrieved async.
+                                console.log(nodes);
+                                simple_draw();  // TODO: code smell, need to decouple.
+                            }
+                        },
+                        {
+                            q: kw
+                            // access_token:   // Q: is it necessary? Looks like not necessary. A:
+                        },
+                        {
+                                method: 'get'
+                        });
+                     });
+
+                
+            }
+            
+            
+        </script>
+    </body>
+</html>
