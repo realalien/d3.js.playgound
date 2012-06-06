@@ -1,5 +1,6 @@
 <html>
     <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <title>D3 Test</title>
         <script type="text/javascript" src="d3.v2.js"></script>
         <script type="text/javascript" src="jquery-1.7.2.js"></script>
@@ -38,6 +39,9 @@
         </script>
         
         <h4> Data </h4>
+        <button type="button" onclick="retrieve_data()">search</button>
+
+        
         <script type="text/javascript">
             
             /*****************************************************************
@@ -63,22 +67,66 @@
             .attr("height", h);
             
             var force;
-            var nodes;
-            
+            var nodes = [];
+            var node;
             
             // TODO: find a better to redraw after data retrieval is done!
             function simple_draw() {
+                
+                // force layout
                 force = d3.layout.force()
-                .nodes(nodes)  // 
+                .nodes(nodes) 
                 .links([])
                 .size([w, h])
                 .start();
+                
+                
+                // 
+                node = vis.selectAll("circle.node")
+                .data(nodes)
+                .enter().append("svg:circle")
+                .attr("class", "node")
+                .attr("cx", function(d) { return d.x; })
+                .attr("cy", function(d) { return d.y; })
+                .attr("r", 8)
+                .style("fill", function(d, i) { return fill(i & 3); })
+                .style("stroke", function(d, i) { return d3.rgb(fill(i & 3)).darker(2); })
+                .style("stroke-width", 1.5)
+                .call(force.drag);
+                                
             }
             
+            vis.style("opacity", 1e-6)
+                .transition()
+                .duration(1000)
+                .style("opacity", 1);
+            
+            if (force != null){
+                force.on("tick", function(e) {                     
+                     // Push different nodes in different directions for clustering.
+                     var k = 6 * e.alpha;
+                     nodes.forEach(function(o, i) {
+                                   o.y += i & 1 ? k : -k;
+                                   o.x += i & 2 ? k : -k;
+                                   });
+                     
+                     node.attr("cx", function(d) { return d.x; })
+                     .attr("cy", function(d) { return d.y; });
+                     });
+            
+                d3.select("body").on("click", function() {
+                                 nodes.forEach(function(o, i) {
+                                               o.x += (Math.random() - .5) * 40;
+                                               o.y += (Math.random() - .5) * 40;
+                                               });
+                                 force.resume();
+                                 });
+            
+            }
 
             // TODO: it is temporary solution for controlling the process of 'retrieval -> draw'
             function retrieve_data() {
-                search_users_by_keyword("上海交通大学");  
+                search_users_by_keyword("上海交通大学");  // 交通大学
             }
             
             
@@ -97,6 +145,8 @@
             
             // 用关键字搜索用户
             function search_users_by_keyword(kw) {
+                var temp = encodeURIComponent(kw);
+                console.log(temp);
                 WB2.anyWhere(function(W){
                      // 搜索用户时的联想搜索建议
                      W.parseCMD("/search/suggestions/users.json",// "/friends_timeline.json", 
@@ -105,13 +155,16 @@
                                 alert(sResult); 
                                 console.log("Going to user data");
                                 //d3test(sResult);
-                                nodes = sResult["users"];  // IDEA: shall we create a data pool for data retrieved async.
+                                console.log(sResult);
+                                nodes = sResult; //["users"];  // IDEA: shall we create a data pool for data retrieved async.
                                 console.log(nodes);
+                                nodes.forEach( function(o,i) {console.log( o.screen_name);});
                                 simple_draw();  // TODO: code smell, need to decouple.
                             }
                         },
                         {
-                            q: kw
+                            q: temp,  // "%E4%B8%8A%E6%B5%B7" stands for "上海"
+                            count : 100
                             // access_token:   // Q: is it necessary? Looks like not necessary. A:
                         },
                         {
